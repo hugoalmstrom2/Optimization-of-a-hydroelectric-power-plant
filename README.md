@@ -2,41 +2,33 @@
 
 Hugo Almström, 2026
 
-In English: a planning model for Fortum's Trängslet, Åsen and Spjutmo hydropower cascade on
-the Österdalälven river (bidding zone SE3). Stochastic dynamic programming over historical
-price and inflow years gives water values and a guide curve. A MILP in PuLP/HiGHS plans each
-day seven days ahead, per unit and quarter-hour, co-optimises energy with FCR-N, FCR-D and
-mFRR, and respects the water-court rules for minimum flow and ramping at Åsen. Day-ahead bids
-come from a two-stage stochastic MILP over five price scenarios with a monotone bid curve and a
-shared mFRR volume, and deviations are settled at real eSett imbalance prices. In a backtest on
-real data from 13 October 2025 to 11 October 2026 the model earns 13.8 M€ (+15.0 %) more than
-the best of five rules of thumb. Short-term planning alone, on the same guide curve as the
-rule, earns 14.5 M€ (+15.7 %, 95 % CI 12.3–17.1 M€), and the gain holds without any reserve
-market. Following the water values instead of the guide curve cost 0.7 M€ that year, and price
-scenarios with a bid curve did not beat a point forecast (−0.9 M€). Perfect foresight would
-have added another 9.1 M€. Compared with reality, the model's Trängslet production (736 GWh)
-is close to the 728 GWh Fortum reported to ENTSO-E, at a higher average price (110 vs 93 €/MWh).
-The rest of this README, the comments and the output are in Swedish.
+Planerings- och budgivningsmodell för Fortums kaskad i Österdalälven (SE3), byggd på öppna
+data från Nord Pool, eSett, Svenska kraftnät, SMHI och ENTSO-E.
 
-Modellen planerar Fortums kraftverk Trängslet, Åsen och Spjutmo i Österdalälven (SE3) kvart
-för kvart och aggregat för aggregat, och säljer både el och stödtjänster. Den bygger på
-riktiga data: spotpriser från Nord Pool, obalanspriser från eSett, stödtjänstpriser från
-Svenska kraftnät, tillrinning och tappning från SMHI och produktion från ENTSO-E.
+- **Långtid:** vattenvärden och styrkurva för Trängslets magasin med stokastisk dynamisk
+  programmering över historiska år där pris och tillrinning hör ihop.
+- **Korttid:** MILP (PuLP/HiGHS) per aggregat och kvart, sju dygn framåt, som samoptimerar el
+  med FCR-N, FCR-D och mFRR och följer vattendomens regler för Åsen.
+- **Budgivning:** tvåstegsmodell över fem prisscenarier ger budkurva och mFRR-volym dagen
+  innan; FCR säljs efter day-ahead och avvikelser avräknas mot eSetts verkliga obalanspris.
 
-- Långtidsplaneringen bestämmer vad vattnet i Trängslets magasin är värt. Vattenvärden och
-  styrkurva räknas med stokastisk dynamisk programmering (SDP) över historiska år där pris
-  och tillrinning hör ihop.
-- Korttidsplaneringen är en MILP i PuLP som löses med HiGHS. Den planerar om varje dygn, sju
-  dygn framåt, samoptimerar el med FCR-N, FCR-D och mFRR och följer vattendomens regler för
-  Åsen: minimitappning, ändringstakt och ingen korttidsreglering på sommaren.
-- Budgivningen sker som på day-ahead-marknaden. En tvåstegsmodell över fem prisscenarier
-  bestämmer budkurvan och mFRR-volymen dagen innan, FCR säljs efter day-ahead, och avvikelser
-  avräknas mot det verkliga obalanspriset.
+**Resultat, backtest 13 oktober 2025 – 11 oktober 2026 på verkliga priser och tillrinning:**
 
-Modellen backtestas över ett helt år mot fem tumregler, mot en MILP som håller sig till
-styrkurvan, mot en MILP med bara punktprognos och mot samma optimering med perfekt
-information. Resultatet jämförs med Fortums verkliga drift. Modellen kan också ta fram en skarp
-körplan för nästa dygn.
+| Trängslet | Energi | Snittpris |
+|---|---:|---:|
+| Fortums verkliga drift (ENTSO-E) | 728 GWh | 93 €/MWh |
+| Modellen | 736 GWh | 110 €/MWh |
+
+Mot den bästa av fem tumregler tjänar modellen 13,8 M€ (+15 %) på året. Ren korttidsvinst, på
+samma styrkurva som tumregeln, är 14,5 M€ (95 % KI 12,3–17,1 M€), och den håller utan
+stödtjänstmarknad. Anläggningsdata är antaganden eller härledda ur offentliga källor, så
+metoden är poängen, inte siffrorna. Backtesten är ett år, och modellen har utvecklats mot samma
+år, så resultatet kan vara i överkant.
+
+![Backtest](resultat/backtest.png)
+
+Mer: [kaskaden och källorna](docs/kaskaden.md), [datakällorna](docs/data.md) och
+[problem som dök upp under arbetet](docs/problem.md). *In English: see the summary at the end.*
 
 ## Resultat: backtest 13 oktober 2025 – 11 oktober 2026
 
@@ -61,8 +53,6 @@ bröt minimitappningen vid Åsen under året.
 \* Netto = el (spot plus obalans) + stödtjänster − startkostnader + värdet av vattnet som är kvar.
 Spill är vatten som släpps förbi turbinerna i alla tre kraftverken, nästan allt vid Åsen och
 Spjutmo när Trängslet kör mer än Åsen tar emot.
-
-![Backtest](resultat/backtest.png)
 
 ### Vad optimeringen tjänar
 
@@ -152,8 +142,8 @@ Trängslet under året:
 **Produktion per kraftverk.** Strategierna som följer styrkurvan producerar 631–662 GWh i
 Trängslet, 116–131 GWh i Åsen och 135–151 GWh i Spjutmo. Fortums normalår är 651, 117 och 138
 GWh, och tillrinningen var 102 % av normalt. Avrinningsområdena är satta efter SMHI:s uppmätta
-flöde och verkningsgraden i Trängslet efter ENTSO-E (se Kaskaden), men fallhöjd, spill och
-drift kommer från modellen.
+flöde och verkningsgraden i Trängslet efter ENTSO-E (se [kaskaden](docs/kaskaden.md)), men
+fallhöjd, spill och drift kommer från modellen.
 
 **Trängslets verkliga produktion.** ENTSO-E publicerar produktionen per aggregat för Trängslet
 (G1–G3), och den finns för alla kvartar i backtesten:
@@ -230,52 +220,20 @@ MILP-strategi tar 15–50 minuter per simulerad vecka, mest på sommaren när Å
 korttidsreglera, medan tumreglerna tar några minuter för hela året. Datorn får inte gå i
 viloläge under tiden. Tabeller och figurer hamnar i `resultat/`.
 
-## Kaskaden
+## Kaskaden i korthet
 
-| | Trängslet | Åsen | Spjutmo | Källa |
-|---|---:|---:|---:|---|
-| Effekt | 300 MW | 24 MW | 35 MW | Fortum |
-| Fallhöjd | 142 m | 24 m | 21,4 m | Fortum |
-| Normal årsproduktion | 651 GWh | 117 GWh | 138 GWh | Fortum |
-| Magasin | 880 Mm³ | cirka 9 Mm³ | ingen egen reglering | Länsstyrelsen Dalarna |
-| Regleringsamplitud | 35 m | – | – | Länsstyrelsen Dalarna |
-| Aggregat | 3 | 2 Kaplan | 1 Kaplan | Trängslet: ENTSO-E; Spjutmo: Litostroj; Åsen: antagande |
-| Maxflöde | 250 m³/s | 112 m³/s | 185 m³/s | Trängslet: Länsstyrelsen; övriga härledda ur effekt och fallhöjd |
-| Minimitappning | – | 21 m³/s | – | Länsstyrelsen Dalarna |
-| Ändringstakt | fri | högst 30 m³/s per timme | följer Åsen | Länsstyrelsen Dalarna |
-| 1 juni–31 augusti | fri | ingen korttidsreglering, högst 40 m³/s per dygn | följer Åsen | Länsstyrelsen Dalarna |
-| Gångtid till nästa station | 2 h | 5 h | – | Åsen–Spjutmo: Länsstyrelsen (4–5 h); Trängslet–Åsen: antagande |
-| Lokalt avrinningsområde | 4 230 km² | 280 km² | 1 410 km² | kalibrerat mot SMHI:s flöde vid Spjutmo |
-
-Åsens magasin räcker till minimitappningen i fem dygn utan tappning från Trängslet, alltså
-cirka 9 Mm³. Väsa, Blyberg och Spjutmo har inga egna regleringsmagasin utan följer Åsens
-tappning med 4–5 timmars fördröjning. I modellen har Spjutmo en damm på 0,5 Mm³, som jämnar ut
-inom någon timme. Väsa och Blyberg ägs gemensamt i separata bolag och ingår inte.
+| | Trängslet | Åsen | Spjutmo |
+|---|---:|---:|---:|
+| Effekt | 300 MW | 24 MW | 35 MW |
+| Fallhöjd | 142 m | 24 m | 21,4 m |
+| Magasin | 880 Mm³ | cirka 9 Mm³ | ingen egen reglering |
+| Maxflöde | 250 m³/s | 112 m³/s | 185 m³/s |
+| Vattendom | – | min 21 m³/s, högst 30 m³/s/h, ingen korttidsreglering juni–augusti | följer Åsen |
 
 Åsen tar emot mindre än hälften av vad Trängslet kan släppa och får inte korttidsregleras på
-sommaren. Körs Trängslet fullt längre än Åsens magasin räcker spills vatten vid Åsen, så
-samordningen mellan stationerna betyder mycket.
-
-Avrinningsområdena är skalade så att den naturliga tillrinningen i medel stämmer med det
-uppmätta flödet vid Spjutmo kraftverk under hydrologiska åren 1996–2025 (91,6 m³/s). Över många
-år är tappningen lika med tillrinningen, eftersom magasinen går runt. Förhållandet är stabilt:
-1,088 för 1996–2010 och 1,081 för 2010–2025 jämfört med den tidigare skalningen efter
-normalårsproduktionen.
-
-Trängslets verkningsgrad är kalibrerad mot ENTSO-E. Den högsta uppmätta produktionen
-2018–2026 är 290 MW, vilket vid 250 m³/s och 142 m ger 0,83 vid full last. Fortums verkliga
-tappning vintern 2025/26 gav 6,5 % mindre el än modellen med 0,93 vid bästa last, alltså 0,87.
-Kalibreringen gäller samma vinter som backtesten, men det är en fysisk parameter som påverkar
-alla strategier lika.
-
-Källor:
-- [Fortum: Trängslets kraftverk](https://www.fortum.com/se/om-oss/elproduktion/vattenkraft/vattenkraftverk/dalalven/trangslets-kraftverk)
-- [Fortum: Åsens kraftverk](https://www.fortum.com/se/om-oss/elproduktion/vattenkraft/vattenkraftverk/dalalven/asens-kraftverk)
-- [Fortum: Spjutmo kraftverk](https://www.fortum.com/se/om-oss/elproduktion/vattenkraft/vattenkraftverk/dalalven/spjutmo-kraftverk)
-- [Länsstyrelsen Dalarna: Dalälvens vattenkraftssystem (2017)](https://nedredalalven.se/filer/about/Rapport_2017-03_Dal%C3%A4lvens_vattenkraftssystem_energiproduktion.pdf), s. 35–41 och 98–101 (vattenhushållningsbestämmelser för Trängslet och Åsen)
-- [Litostroj: Spjutmos Kaplanaggregat](https://www.litostrojpower.com/news/2019/07/82-Litostroj-Power-signed-a-contract-with-Fortum-AB-for-turbine-refurbishment-of-HPP-Spjutmo-in-Sweden)
-- [Wikipedia: Trängslet Dam](https://en.wikipedia.org/wiki/Tr%C3%A4ngslet_Dam)
-- [Elområden per kommun](https://boio.se/el/elomrade)
+sommaren. Körs Trängslet fullt längre än Åsens damm räcker spills vatten vid Åsen, så
+samordningen mellan stationerna betyder mycket. Alla parametrar, källor och kalibreringen mot
+SMHI och ENTSO-E finns i [docs/kaskaden.md](docs/kaskaden.md).
 
 ## Modellen
 
@@ -423,110 +381,19 @@ Två jämförelser görs, båda mot den regel som gick bäst, så att vinsten in
 - Korttidsvinsten: MILP som följer styrkurvan mot den bästa regeln som följer styrkurvan.
 - Totalvinsten: MILP med budgivning mot den bästa av alla regler.
 
-## Data
-
-- Spotpriser: Nord Pool day-ahead SE3, från november 2022 via elprisetjustnu.se (kvartspriser
-  sedan oktober 2025) och tidigare timpriser tillbaka till november 2011 från Energinets
-  Energi Data Service. Tiden anges i CET året runt.
-- Obalanspriser: eSett Open Data (EXP14), per kvart.
-- Stödtjänster: Svenska kraftnäts Mimer, med kapacitetspriser och upphandlade volymer per
-  timme för FCR-N, FCR-D upp/ned och mFRR upp/ned i SE3.
-- Tillrinning: SMHI:s station 2258 Idre 3 (2 384 km²) i Österdalälven, uppströms Trängslet.
-  Den är oreglerad, har data sedan 1977 och vårflod i maj. Den specifika avrinningen skalas
-  med arean och fördröjs med en linjär magasinsmodell.
-- Verklig tappning: SMHI:s station 2436 vid Spjutmo kraftverk mäter det reglerade flödet per
-  dygn sedan 1996. Det används för att kalibrera tillrinningen och för att jämföra modellen
-  med hur Fortum faktiskt har tappat.
-- Verklig produktion: ENTSO-E:s transparensplattform, produktion per aggregat (dokumenttyp
-  A73) för Trängslet G1–G3 sedan februari 2018. Den publiceras för aggregat från 100 MW och
-  per kontrollområde, så Åsen och Spjutmo finns inte med.
-
-Källor:
-- [elprisetjustnu.se](https://www.elprisetjustnu.se/elpris-api)
-- [Energi Data Service: Elspotprices (API)](https://api.energidataservice.dk/dataset/Elspotprices?limit=5)
-- [eSett Open Data](https://opendata.esett.com/)
-- [Svenska kraftnät: Mimer](https://mimer.svk.se/)
-- [SMHI: Idre 3, vattenföring (API)](https://opendata-download-hydroobs.smhi.se/api/version/latest/parameter/1/station/2258.json)
-- [SMHI: Spjutmo kraftverk, vattenföring (API)](https://opendata-download-hydroobs.smhi.se/api/version/latest/parameter/1/station/2436.json)
-- [ENTSO-E Transparency Platform: Actual Generation per Generation Unit](https://transparency.entsoe.eu/)
-- [Svenska kraftnät: villkor för FCR](https://svk.se/siteassets/aktorsportalen/bsp-och-brp/tidigare-balansansvarsavtal/avtal-4620-8-bilaga-3-villkor-fcr.pdf) (upphandling före och efter day-ahead)
-- [Svenska kraftnät: mFRR-kapacitetsmarknaden](https://www.svk.se/en/about-us/news/news/first-daily-auction-for-the-national-mfrr-capacity-market-on-17-october) (stängning 07.30 dagen före)
-
-## Problem som dök upp under arbetet
-
-De flesta är typiska för vattenkraftsplanering.
-
-- Spill i förtid under vårfloden. När prognosen säger att magasinet blir fullt spelar det
-  ingen roll för en deterministisk modell när spillet sker, så den rullande planen spillde i
-  onödan dygn efter dygn. Spillstraffet är nu något högre ju tidigare spillet sker.
-- Tomt magasin före vårfloden. SDP:n kände först inte till vattendomen nedströms.
-  Optimeringen tömde magasinet och bröt minimitappningen i 54 timmar när den naturliga
-  tillrinningen var lägre än kravet.
-- Minimitappning som inte går att uppfylla. Ett hårt villkor ger ingen lösning alls efter en
-  prognosmiss. Villkoret är därför mjukt med högt straff, dammar med minimitappning planeras
-  med säkerhetsmarginal, och varje bruten timme redovisas.
-- Vattenvärde från efterhandspriser. Ett vattenvärde från senaste månadens medelpris släpar
-  efter när priserna stiger, och optimeringen tömde magasinet på "billigt" vatten. SDP:n
-  löser det med säsong, fyllnadsgrad och osäkerhet.
-- För litet magasin och fel tillrinningsregim. Med en regleringsgrad på 7 % blev magasinet
-  fullt både vid vårfloden och under hösten. En station i Värmland hade vårflod i mars–april,
-  vilket inte passar ett fjällmagasin.
-- Vinst som egentligen var en säsongssatsning. Första helårskörningen gav +27 %, men hälften
-  kom från att MILP lämnade magasinet nästan tomt. Strategin som följer styrkurvan och
-  konfidensintervallet skiljer nu korttidsvinsten från säsongsomfördelningen.
-- För svaga tumregler. Tumregeln fick först aldrig köra Trängslet mer än Åsen tar emot och
-  tog samma vattenmängd varje dygn. Nu finns fem regler, däribland veckotopp och
-  vattenvärdesbud, och vinsten redovisas mot den som gick bäst.
-- Vatten som släpptes förbi en stillastående turbin. När ett magasin tog slut drog
-  simuleringen ned flödet under minsta last, och då gick vattnet förbi turbinen i stället för
-  att sparas. Nu står turbinen och vattnet sparas.
-- Bud och leverans som inte stämde överens. Budscenarierna planerades först över tre dygn och
-  leveransen över sju. En strategi tjänade då 1,5 M€ på obalans som inte hade med planeringen
-  att göra. Nu använder båda samma modell och horisont.
-- Budkurva som tog slut. Det verkliga priset hamnade under alla fem scenarierna i 14 % av
-  kvartarna, och då gällde det lägsta scenariots volym även vid 7 €/MWh. Nu täcker scenarierna
-  hela felfördelningen och budet faller till noll vid vattenvärdet.
-- Budkurva som rättades i efterhand. Scenarierna optimerades först var för sig, och deras
-  körplaner bröt budkurvan i 6–36 kvartar per dygn: ett scenario med lägre pris ville
-  producera mer. Kurvan rättades genom att höja de lägre buden, vilket gav för stora
-  åtaganden. Nu är budkurvan ett villkor i tvåstegsmodellen.
-- Stödtjänster som låste produktionen. Reserverna bestämdes först i mittenscenariot och låstes
-  sedan i alla scenarier. Nedregleringsreserver tvingade då fram produktion när priset blev
-  lågt, i snitt 54 MW vid 11 €/MWh, och på fyra veckor kostade det 1,2 M€ för 0,35 M€ i
-  reservintäkt. Att bara sälja det som alla scenarier ville sälja tog bort problemet, men då
-  såldes för lite mFRR upp: 2,7 M€ på ett år mot 13,3 M€ med perfekt information.
-  Tvåstegsmodellen väger intäkt mot flexibilitet och gav 4,2 M€ mer netto.
-- Leveranskontroll per produkt. Leveransen kontrollerades först produkt för produkt med FCR
-  först, medan optimeringen kunde använda samma marginal till mFRR. Då såg 1 400 MWh i veckan
-  ut att inte gå att leverera fast planen höll. Nu prövas det sålda mot kaskadens samlade
-  marginaler.
-- Fel område i frågan till ENTSO-E. Produktion per aggregat publiceras per kontrollområde,
-  för Sverige hela landet, och inte per elområde. Frågan för SE3 gav ett tomt svar.
-- Ett mjukt villkor som var billigt att bryta. På sommardygnen räknades straffet för att ändra
-  Åsens tappning bara för en kvart. MILP höll dygnsgränsen första kvarten och ändrade sedan
-  tappningen resten av dygnet. Simuleringen jämnar ut dygnet, så Åsen tömdes och
-  minimitappningen bröts i 9–14 timmar den 15–16 augusti. Nu kostar en ändring för hela
-  dygnet, och ett test visar att det inte längre lönar sig.
-- Numeriskt fel i lösaren. HiGHS avbröt en optimering med "Solve error" (12 januari,
-  vattenvärde +20 %). Felet beror på vägen genom sökningen, så ett nytt försök med längre
-  tidsgräns gav samma fel. Nu görs nya försök med andra slumpfrön.
-- Tumregler utan marginal. Reglerna släppte från Trängslet exakt det som minimitappningen vid
-  Åsen krävde enligt tillrinningsprognosen. När Åsens damm var tom och tillrinningen blev
-  några procent lägre bröts minimitappningen med 0,1–0,7 m³/s, upp till 112 timmar om året.
-  Nu räknar reglerna med 20 % lägre lokal tillrinning än prognosen, som var som mest 17 % för
-  hög under backtesten.
-- Tumregler som släppte vatten förbi turbinen. Flödet för minimitappningen, cirka 18 m³/s, är
-  mindre än minsta last i Trängslet, 33 m³/s. Reglerna släppte det förbi turbinerna, i
-  veckotopp 39 % av tiden och i vattenvärdesbudet 65 %, och förlorade 70–120 GWh om året. Nu
-  kör de ett aggregat på minsta last en del av dygnet, som Fortum gör. Dygnets sista timmar
-  körs alltid, eftersom vattnet därifrån når Åsen först nästa dygn. Tumreglerna blev 4–5 M€
-  bättre, och vinsten mot dem sjönk från 17,7 till 13,8 M€.
+Datakällorna beskrivs i [docs/data.md](docs/data.md).
 
 ## Antaganden och begränsningar
 
+- Backtesten omfattar ett år, och modellen har utvecklats och felsökts mot samma år (se
+  [problem som dök upp](docs/problem.md)). Några parametrar är dessutom kalibrerade på
+  perioden: Trängslets verkningsgrad mot ENTSO-E vintern 2025/26 och obalansstraffet i
+  budgivningen mot eSetts priser under året. Resultatet kan därför vara i överkant, och nästa
+  steg är att köra ett andra år med oförändrad kod.
 - Antal aggregat, verkningsgrader, dammvolymer, gångtider, minimitappning och
   regleringsgränser är antaganden eller härledda ur offentliga källor. Med Fortums interna data
-  ändras siffrorna men inte metoden.
+  ändras siffrorna men inte metoden. Trängslets egna vattenhushållningsbestämmelser utöver
+  0–880 Mm³ och 0–250 m³/s ingår inte.
 - FCR-andelarna (10 % respektive 20 % av kapaciteten i drift) och taket på en fjärdedel av
   elområdets upphandling är antaganden, och kaskaden antas vara pristagare. Aktiveringsenergi,
   aFRR och krav på förkvalificering ingår inte.
@@ -551,15 +418,18 @@ De flesta är typiska för vattenkraftsplanering.
 
 ## Nästa steg
 
-1. En prisprognos med ENTSO-E:s prognoser för vind och last, och scenarier från den i stället
+1. Ett andra backtestår med oförändrad kod, som test av att vinsten inte är anpassad till
+   2025/26.
+2. En prisprognos med ENTSO-E:s prognoser för vind och last, och scenarier från den i stället
    för historiska fel.
-2. Intradaghandel för att justera efter prognosmissar i stället för att betala obalans.
-3. aFRR, och aktiveringsenergi för mFRR.
-4. Fler aggregatdetaljer: verkningsgradskurvor per aggregat, förbjudna driftområden och
+3. Intradaghandel för att justera efter prognosmissar i stället för att betala obalans.
+4. aFRR, och aktiveringsenergi för mFRR.
+5. Fler aggregatdetaljer: verkningsgradskurvor per aggregat, förbjudna driftområden och
    ramper.
-5. En tillrinningsprognos med snömagasinet, och risk mätt på magasinsnivån inför vårfloden i
+6. En tillrinningsprognos med snömagasinet, och risk mätt på magasinsnivån inför vårfloden i
    stället för på intäkten.
-6. Kortare lösningstider, till exempel med varmstart från gårdagens plan, så att MIP-gapet blir
+7. Kortare lösningstider, till exempel med varmstart från gårdagens plan eller ett heltal för
+   antal aggregat i drift i stället för en binär variabel per aggregat, så att MIP-gapet blir
    mindre inom samma tidsgräns.
 
 ## Filer
@@ -577,7 +447,30 @@ De flesta är typiska för vattenkraftsplanering.
 | [run.py](run.py) | Backtest, validering mot verklig drift, skarp plan och rapport |
 | [plot.py](plot.py) | Figurer |
 | [tests/](tests/) | Vattenbalans, gränser, vattendomens regler, konkavitet, fallhöjd, budkurvor, prognoser, SDP och CVaR, stödtjänster, tumregler, lösarfel, ENTSO-E-svar, MILP mot simulering. Körs på GitHub vid varje push |
+| [docs/](docs/) | Kaskaden med källor, datakällor och problem som dök upp under arbetet |
 | [v1_enkel/](v1_enkel/) | Första versionen: ett kraftverk, ren LP, syntetiska data |
+
+## Summary in English
+
+A planning and bidding model for Fortum's Trängslet, Åsen and Spjutmo hydropower cascade on
+the Österdalälven river (bidding zone SE3), built on public data. Stochastic dynamic
+programming over historical price and inflow years gives water values and a guide curve. A
+MILP in PuLP/HiGHS plans each day seven days ahead, per unit and quarter-hour, co-optimises
+energy with FCR-N, FCR-D and mFRR, and respects the water-court rules for minimum flow and
+ramping at Åsen. Day-ahead bids come from a two-stage stochastic MILP over five price
+scenarios with a monotone bid curve and a shared mFRR volume, and deviations are settled at
+real eSett imbalance prices.
+
+In a backtest on real data from 13 October 2025 to 11 October 2026 the model's Trängslet
+production (736 GWh) is close to the 728 GWh Fortum reported to ENTSO-E, at a higher average
+price (110 vs 93 €/MWh). Against the best of five rules of thumb the model earns 13.8 M€
+(+15.0 %) more; short-term planning alone, on the same guide curve as the rule, earns 14.5 M€
+(+15.7 %, 95 % CI 12.3–17.1 M€), and the gain holds without any reserve market. Following the
+water values instead of the guide curve cost 0.7 M€ that year, price scenarios with a bid
+curve did not beat a point forecast (−0.9 M€), and perfect foresight would have added another
+9.1 M€. The backtest covers one year, which the model was also developed against, so the
+result may be on the high side. Plant parameters are assumptions or derived from public
+sources. The rest of this README, the comments and the output are in Swedish.
 
 ## Licens
 
