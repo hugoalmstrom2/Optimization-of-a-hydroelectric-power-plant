@@ -85,7 +85,7 @@ def price_path(known: pd.Series, start: pd.Timestamp, steps: int) -> tuple[np.nd
     deviation = known.iloc[-1] - profile[slot(known.index[-1:])[0]]
     hours_ahead = (index[n_known:] - known.index[-1]) / pd.Timedelta(hours=1)
 
-    path = actual.to_numpy()
+    path = actual.to_numpy(copy=True)
     path[n_known:] = profile.reindex(slot(index[n_known:])).to_numpy() + deviation * LEVEL_DECAY ** hours_ahead
     first = index[n_known] if n_known < steps else None
     if first is not None and first == first.normalize():

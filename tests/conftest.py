@@ -2,9 +2,15 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+# pandas 3 gör copy-on-write till standard: data som tas ut ur en Series eller DataFrame är
+# skrivskyddad. Testerna körs med samma beteende även med pandas 2.
+if pd.__version__.startswith("2."):
+    pd.set_option("mode.copy_on_write", True)
 
 from cascade import Cascade, Plant, Unit  # noqa: E402
 from model import State  # noqa: E402
