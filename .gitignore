@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Hämtade data, vattenvärden, sparpunkter och API-nyckel. Allt hämtas eller räknas om vid körning.
+data_cache/
+*.tmp
