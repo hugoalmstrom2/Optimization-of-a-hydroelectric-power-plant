@@ -1,0 +1,4 @@
+pulp[highs]>=4.0
+numpy
+pandas
+matplotlib
